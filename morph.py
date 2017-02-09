@@ -15,7 +15,7 @@ def run(animal,human):
 	print animal,human
 	img1 = cv2.imread(animals.get(animal)[0])
 	img2 = cv2.imread(human)
-	
+
 	#cv2.imshow('eyes',img1[142:178,290:326,:])
 	#cv2.waitKey(0)
 
@@ -33,6 +33,12 @@ def run(animal,human):
 	if eyes1 is None: 
 		print animal,"is not available. Please choose one from:", animals.keys()
 		return -1
+
+	# lower saturation
+	hsv = cv2.cvtColor(img2, cv2.COLOR_BGR2HSV)
+	hsv[...,1] = hsv[...,1]*0.4
+	img2 = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
+	
 
 	print "eyes detected:", eyes2
 	# eyes centroids
@@ -69,12 +75,13 @@ def run(animal,human):
 	
 	im22 = warp_im(img2,M,dshape)
 
-	top = np.array([[195,156],[194,57],[202,0],[377,0],[377, 468]])
+	eye = np.array([[100,132],[120,132]])
+	top = np.array([[195,156],[194,57],[252,0],[377,0],[377, 468]])
 	bottom = np.array([[207,468],[271,423],[377,0],[377, 468]])
 	center = np.array([[271,423],[235,290],[230,168]])
 
-	points = [top, center, bottom]
-	#corr_clr = correct_colours(img1, im22, 10.)
+	points = [eye,top, center, bottom]
+	#corr_clr = correct_colours(img1, im22, points)
 	mask = get_face_mask(img1,points)
 
 	output_im = (img1 * (1.0 - mask) + im22 * mask).astype(np.uint8)
@@ -87,7 +94,7 @@ def run(animal,human):
 
 
 def get_face_mask(im, landmarks):
-	FEATHER_AMOUNT = 71
+	FEATHER_AMOUNT = 31
 	im = np.zeros(im.shape[:2], dtype=np.float64)
 	for points in landmarks:
 		draw_convex_hull(im,
